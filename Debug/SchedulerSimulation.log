@@ -1,0 +1,5 @@
+﻿  Main.cpp
+y:\fruitloops\updated\3-16-12-36\schedulersimulation\process.h(33): warning C4018: '<': signed/unsigned mismatch
+y:\fruitloops\updated\3-16-12-36\schedulersimulation\main.cpp(42): warning C4018: '>=': signed/unsigned mismatch
+  SchedulerSimulation.vcxproj -> Y:\FruitLOOPS\Updated\3-16-12-36\SchedulerSimulation\Debug\SchedulerSimulation.exe
+  SchedulerSimulation.vcxproj -> Y:\FruitLOOPS\Updated\3-16-12-36\SchedulerSimulation\Debug\SchedulerSimulation.pdb (Full PDB)
