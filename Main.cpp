@@ -6,8 +6,15 @@
 
 using namespace std;
 
-//Global variables used to calculate program statistics
+enum ProcessState
+{
+	STATE_NEW, STATE_READY, STATE_RUNNING, STATE_WAITING, STATE_FINISHED
+};
+
+// Used to track clock cycles
 int globalTime = 0;
+
+//Global variables used to calculate program statistics
 int throughputTime;
 int averageTATime;
 int averageWTime;
@@ -15,19 +22,47 @@ int averageRTime;
 int averageSwitchTime;
 int processorUtilTIme;
 
-//Queue to hold processes
+// Multiprocessor Ready Queue
 queue<Process*> pQueue;
+// Array of Ready Queues: one for each processor
 queue<Process*> CPUQueue[4];
-queue<Process*> IOQueue;
+// Queue of processes using the IO device
+queue<Process*> IOQueue;	
+int IOBurst = -1;
+
+// Vector of processes that have finished executing
 vector<Process*> terminated;
+// Represent processes: pointers to each processes bing 'executed'
 Process* CPUs[4];
+
+// Simulates one cycle of wait for the IO 
+void IOExecute()
+{
+	if (!IOQueue.empty()) {
+		// Simulate waiting one clock cycle
+		IOBurst--;
+		if (IOBurst == 0) {
+			IOQueue.front()->currentBurst += 1;
+
+			// Return the process to the ready Queu
+			CPUQueue[0].push(IOQueue.front());
+			IOQueue.pop();
+
+			// Reset the burst time
+			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
+		} else if (IOBurst == -1) {
+			// Set initial burst time
+			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
+		}
+	}
+}
 
 //Function for the FCFS scheduling policy
 void FCFS()
 {
 	CPUQueue[0] = pQueue;
-	int cont = 1;
 	int burst = 0;
+	int cont = 1;
 	while (cont == 1) {
 		if (CPUs[0] == NULL) {
 			CPUs[0] = CPUQueue[0].front();
@@ -35,10 +70,10 @@ void FCFS()
 			burst = CPUs[0]->myVec[CPUs[0]->currentBurst];	
 			CPUs[0]->currentBurst += 1;
 		}
+
 		if (burst != 0) {
 			burst -= 1;
-		}
-		else {
+		} else {
 			if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size()) {
 				// Place process in a vector for finished processes
 				terminated.push_back(CPUs[0]);
@@ -48,6 +83,10 @@ void FCFS()
 			}
 			CPUs[0] = NULL;
 		}
+
+		// Call the IOQueue to execute one cycle
+		IOExecute();
+
 		globalTime++;
 
 	}
