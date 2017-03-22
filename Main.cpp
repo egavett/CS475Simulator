@@ -43,18 +43,25 @@ void IOExecute()
 {
 	if (!IOQueue.empty()) {
 		// Simulate waiting one clock cycle
-		IOBurst--;
+
+		if (IOBurst > 0) {
+			IOBurst--;
+		}
+
 		if (IOBurst == 0) {
 			IOQueue.front()->currentBurst += 1;
+
+			cout << "Process " <<IOQueue.front()->ID << " returned to the ready queue." << endl;
 
 			// Return the process to the ready Queue
 			CPUQueue[0].push(IOQueue.front());
 			IOQueue.pop();
 
 			// Reset the burst time
-			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
-		}
-		else if (IOBurst == -1) {
+			if (!IOQueue.empty()) {
+				IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
+			}
+		} else if (IOBurst == -1) {
 			// Set initial burst time
 			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
 		}
@@ -76,9 +83,12 @@ void FCFS()
 			if (!CPUQueue[0].empty()) {
 				CPUs[0] = CPUQueue[0].front();
 				CPUQueue[0].pop();
+
+				cout << "Process " << CPUs[0]->ID<< " added to the CPU." << endl;
+
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
-				cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
+				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
 			else {
 				cont = 0;
@@ -96,10 +106,12 @@ void FCFS()
 			{
 				// Place process in a vector for finished processes
 				terminated.push_back(CPUs[0]);
+				cout << "Process " << CPUs[0]->ID << " terminated." << endl;
 			}
 			else 
 			{
 				IOQueue.push(CPUs[0]);
+				cout << "Process " << CPUs[0]->ID << " pushed to the IOQueue." << endl;
 			}
 			CPUs[0] = NULL;
 		}
