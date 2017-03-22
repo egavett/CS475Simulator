@@ -27,7 +27,7 @@ queue<Process*> pQueue;
 // Array of Ready Queues: one for each processor
 queue<Process*> CPUQueue[4];
 // Queue of processes using the IO device
-queue<Process*> IOQueue;	
+queue<Process*> IOQueue;
 int IOBurst = -1;
 
 // Vector of processes that have finished executing
@@ -50,7 +50,8 @@ void IOExecute()
 
 			// Reset the burst time
 			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
-		} else if (IOBurst == -1) {
+		}
+		else if (IOBurst == -1) {
 			// Set initial burst time
 			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
 		}
@@ -61,19 +62,22 @@ void IOExecute()
 void FCFS()
 {
 	CPUQueue[0] = pQueue;
-	int burst = 0;
 	int cont = 1;
+	int burst = 0;
 	while (cont == 1) {
+		if (CPUQueue[0].empty()) {
+			cont = 0;
+		}
 		if (CPUs[0] == NULL) {
 			CPUs[0] = CPUQueue[0].front();
 			CPUQueue[0].pop();
 			burst = CPUs[0]->myVec[CPUs[0]->currentBurst];	
 			CPUs[0]->currentBurst += 1;
 		}
-
 		if (burst != 0) {
 			burst -= 1;
-		} else {
+		}
+		else {
 			if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size()) {
 				// Place process in a vector for finished processes
 				terminated.push_back(CPUs[0]);
@@ -130,7 +134,7 @@ int main()
 		}
 
 	FCFS();
-	
+
 
 	return 0;
 }
