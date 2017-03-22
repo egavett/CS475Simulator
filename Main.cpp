@@ -169,7 +169,7 @@ int main()
 	ifstream fileObject;
 	Process *p;
 //Open file to extract data
-	fileObject.open("timeInfo.txt");
+	fileObject.open("timeInfo2.txt");
 
 //Statement to check if file opened correctly
 	if (fileObject.fail())
