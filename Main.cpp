@@ -24,14 +24,17 @@ int processorUtilTIme;
 
 // Multiprocessor Ready Queue
 queue<Process*> pQueue;
+
 // Array of Ready Queues: one for each processor
 queue<Process*> CPUQueue[4];
+
 // Queue of processes using the IO device
 queue<Process*> IOQueue;
 int IOBurst = -1;
 
 // Vector of processes that have finished executing
 vector<Process*> terminated;
+
 // Represent processes: pointers to each processes bing 'executed'
 Process* CPUs[4];
 
@@ -44,7 +47,7 @@ void IOExecute()
 		if (IOBurst == 0) {
 			IOQueue.front()->currentBurst += 1;
 
-			// Return the process to the ready Queu
+			// Return the process to the ready Queue
 			CPUQueue[0].push(IOQueue.front());
 			IOQueue.pop();
 
@@ -55,6 +58,8 @@ void IOExecute()
 			// Set initial burst time
 			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
 		}
+	} else {
+		IOBurst = -1;
 	}
 }
 
@@ -64,35 +69,49 @@ void FCFS()
 	CPUQueue[0] = pQueue;
 	int cont = 1;
 	int burst = 0;
-	while (cont == 1) {
-		if (CPUQueue[0].empty()) {
-			cont = 0;
+	while (cont == 1) 
+	{
+		if (CPUs[0] == NULL)
+		{
+			if (!CPUQueue[0].empty()) {
+				CPUs[0] = CPUQueue[0].front();
+				CPUQueue[0].pop();
+				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
+				CPUs[0]->currentBurst += 1;
+				cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
+			}
+			else {
+				cont = 0;
+				break;
+			}
 		}
-		if (CPUs[0] == NULL) {
-			CPUs[0] = CPUQueue[0].front();
-			CPUQueue[0].pop();
-			burst = CPUs[0]->myVec[CPUs[0]->currentBurst];	
-			CPUs[0]->currentBurst += 1;
-		}
-		if (burst != 0) {
+		if (burst != 0)
+		{
 			burst -= 1;
 		}
-		else {
-			if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size()) {
+
+		else
+		{
+			if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size()) 
+			{
 				// Place process in a vector for finished processes
 				terminated.push_back(CPUs[0]);
 			}
-			else {
+			else 
+			{
 				IOQueue.push(CPUs[0]);
 			}
 			CPUs[0] = NULL;
 		}
 
+		
 		// Call the IOQueue to execute one cycle
 		IOExecute();
 
-		globalTime++;
 
+		//Time click increase
+		globalTime++;
+		
 	}
 }
 
