@@ -21,6 +21,7 @@ int averageWTime;
 int averageRTime;
 int averageSwitchTime;
 int processorUtilTIme;
+double totalWait;
 
 // Multiprocessor Ready Queue
 queue<Process*> pQueue;
@@ -41,14 +42,17 @@ Process* CPUs[4];
 // Simulates one cycle of wait for the IO 
 void IOExecute()
 {
-	if (!IOQueue.empty()) {
+	if (!IOQueue.empty()) 
+	{
 		// Simulate waiting one clock cycle
 
-		if (IOBurst > 0) {
+		if (IOBurst > 0) 
+		{
 			IOBurst--;
 		}
 
-		if (IOBurst == 0) {
+		if (IOBurst == 0) 
+		{
 			IOQueue.front()->currentBurst += 1;
 
 			cout << "Process " <<IOQueue.front()->ID << " returned to the ready queue." << endl;
@@ -58,16 +62,25 @@ void IOExecute()
 			IOQueue.pop();
 
 			// Reset the burst time
-			if (!IOQueue.empty()) {
+		if (!IOQueue.empty()) 
+			{
 				IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
+				cout <<"This is an IO burst:  " << IOBurst;
 			}
-		} else if (IOBurst == -1) {
+		} 
+		else if (IOBurst == -1)
+
+		{
 			// Set initial burst time
 			IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
+			cout << "This is an IO burst:  " << IOBurst << endl;
+			totalWait += IOBurst;
 		}
-	} else {
-		IOBurst = -1;
-	}
+	} 
+		else
+		{
+			IOBurst = -1;
+		}
 }
 
 //Function for the FCFS scheduling policy
@@ -166,6 +179,9 @@ int main()
 
 	FCFS();
 
+	averageWTime = totalWait / terminated.size();
+
+	cout << "Average wait time for FCFS: " << averageWTime << endl;
 
 	return 0;
 }
