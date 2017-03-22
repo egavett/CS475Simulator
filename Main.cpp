@@ -86,14 +86,24 @@ void IOExecute()
 //Function for the FCFS scheduling policy
 void FCFS()
 {
-	CPUQueue[0] = pQueue;
 	int cont = 1;
 	int burst = 0;
 	while (cont == 1) 
 	{
+		cout << "The current cycle is: " << globalTime << endl;
+
+		if (!pQueue.empty()) {
+			if (pQueue.front()->object->arrivalTime <= globalTime) {
+				CPUQueue[0].push(pQueue.front());
+				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+				pQueue.pop();
+			}
+		}
+
 		if (CPUs[0] == NULL)
 		{
-			if (!CPUQueue[0].empty()) {
+			if (!CPUQueue[0].empty())
+			{
 				CPUs[0] = CPUQueue[0].front();
 				CPUQueue[0].pop();
 
@@ -103,7 +113,8 @@ void FCFS()
 				CPUs[0]->currentBurst += 1;
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
-			else {
+			else if (pQueue.empty())
+			{
 				cont = 0;
 				break;
 			}
@@ -115,18 +126,20 @@ void FCFS()
 
 		else
 		{
-			if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size()) 
-			{
-				// Place process in a vector for finished processes
-				terminated.push_back(CPUs[0]);
-				cout << "Process " << CPUs[0]->ID << " terminated." << endl;
+			if (CPUs[0] != NULL) {
+				if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size())
+				{
+					// Place process in a vector for finished processes
+					terminated.push_back(CPUs[0]);
+					cout << "Process " << CPUs[0]->ID << " terminated." << endl;
+				}
+				else
+				{
+					IOQueue.push(CPUs[0]);
+					cout << "Process " << CPUs[0]->ID << " pushed to the IOQueue." << endl;
+				}
+				CPUs[0] = NULL;
 			}
-			else 
-			{
-				IOQueue.push(CPUs[0]);
-				cout << "Process " << CPUs[0]->ID << " pushed to the IOQueue." << endl;
-			}
-			CPUs[0] = NULL;
 		}
 
 		
@@ -140,6 +153,13 @@ void FCFS()
 	}
 }
 
+void SPN()
+{
+
+
+
+
+}
 int main()
 {
 //Variables for file manipulation
