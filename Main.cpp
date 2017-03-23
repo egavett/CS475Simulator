@@ -45,7 +45,7 @@ vector<Process*> terminated;
 // Represent processes: pointers to each processes bing 'executed'
 Process* CPUs[4];
 
-vector<std::tuple<int, Process*>> SPNCPUQueue;
+vector<std::tuple<int, Process*>> SPNCPUQueue[4];
 
 // Simulates one cycle of wait for the IO 
 void IOExecute()
@@ -196,32 +196,46 @@ void SPN()
 			// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
 			if (pQueue.front()->object->arrivalTime <= globalTime)
 			{
+				
 				tuple<int, Process*> p = make_tuple(pQueue.front()->myVec[pQueue.front()->currentBurst], pQueue.front());
-				if (!SPNCPUQueue.empty()) 
+				
+				if (!SPNCPUQueue[0].empty()) 
 				{
-					if (pQueue.front()->myVec[pQueue.front()->currentBurst] >= get<0>(SPNCPUQueue.front()))
+					if (pQueue.front()->myVec[pQueue.front()->currentBurst] >= get<0>(SPNCPUQueue[0].front()))
 					{
-						cout << "This element goes first!" << endl;
+						vector<tuple<int,Process*>>::iterator it;
+						it = SPNCPUQueue[0].begin();
+						it = SPNCPUQueue[0].insert(it, p);
 
 					}
+					else 
+					{
+						SPNCPUQueue[0].push_back(p);
+					}
+					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+					pQueue.pop();
 				}
+				else
+				{
+					SPNCPUQueue[0].push_back(p);
+				}
+				
 
+				
 
-				SPNCPUQueue.push_back(p);
-
-				cout << "burst time: " << get<0>(p) << endl;
-				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
-				pQueue.pop();
+				cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;
+				
+				
 			}
 		}
 
 		if (CPUs[0] == NULL)
 		{
-			if (!CPUQueue[0].empty())
+			if (!SPNCPUQueue[0].empty())
 			{
 				// Add processes to processor
-				CPUs[0] = CPUQueue[0].front();
-				CPUQueue[0].pop();
+				CPUs[0] = get<1>(SPNCPUQueue[0].front());
+				SPNCPUQueue[0].erase(SPNCPUQueue[0].begin());
 
 				cout << "Process " << CPUs[0]->ID << " added to the CPU." << endl;
 				// Keep updated burst time
@@ -264,7 +278,8 @@ void SPN()
 		}
 
 		// Call the IOQueue to execute one cycle
-		IOExecute();
+
+		//IOExecute();
 
 		// Time click increase
 		globalTime++;
