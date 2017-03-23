@@ -3,6 +3,7 @@
 #include"Process.h"
 #include<queue>
 #include<fstream>
+#include <tuple>
 
 using namespace std;
 
@@ -43,6 +44,8 @@ vector<Process*> terminated;
 
 // Represent processes: pointers to each processes bing 'executed'
 Process* CPUs[4];
+
+vector<std::tuple<int, Process*>> SPNCPUQueue;
 
 // Simulates one cycle of wait for the IO 
 void IOExecute()
@@ -177,12 +180,95 @@ void FCFS()
 	}
 }
 
+
 void SPN()
 {
+	// Local variables to keep track of loop and burst times
+	int cont = 1;
+	int burst = 0;
+
+	while (cont == 1)
+	{
+		cout << "The current cycle is: " << globalTime << endl;
+
+		if (!pQueue.empty())
+		{
+			// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
+			if (pQueue.front()->object->arrivalTime <= globalTime)
+			{
+				tuple<int, Process*> p = make_tuple(pQueue.front()->myVec[pQueue.front()->currentBurst], pQueue.front());
+				if (!SPNCPUQueue.empty()) 
+				{
+					if (pQueue.front()->myVec[pQueue.front()->currentBurst] >= get<0>(SPNCPUQueue.front()))
+					{
+						cout << "This element goes first!" << endl;
+
+					}
+				}
 
 
+				SPNCPUQueue.push_back(p);
 
+				cout << "burst time: " << get<0>(p) << endl;
+				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+				pQueue.pop();
+			}
+		}
 
+		if (CPUs[0] == NULL)
+		{
+			if (!CPUQueue[0].empty())
+			{
+				// Add processes to processor
+				CPUs[0] = CPUQueue[0].front();
+				CPUQueue[0].pop();
+
+				cout << "Process " << CPUs[0]->ID << " added to the CPU." << endl;
+				// Keep updated burst time
+				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
+				CPUs[0]->currentBurst += 1;
+				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
+			}
+
+			// No more processes left, then exit
+			else if (pQueue.empty())
+			{
+				cont = 0;
+				break;
+			}
+		}
+
+		if (burst != 0)
+		{
+			burst -= 1;
+		}
+
+		else
+		{
+			if (CPUs[0] != NULL)
+			{
+				if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size())
+				{
+					// Place process in a vector for finished processes
+					terminated.push_back(CPUs[0]);
+					cout << "Process " << CPUs[0]->ID << " terminated." << endl;
+				}
+				else
+				{
+					// Otherwise add them to the IO queue
+					IOQueue.push(CPUs[0]);
+					cout << "Process " << CPUs[0]->ID << " pushed to the IOQueue." << endl;
+				}
+				CPUs[0] = NULL;
+			}
+		}
+
+		// Call the IOQueue to execute one cycle
+		IOExecute();
+
+		// Time click increase
+		globalTime++;
+	}
 }
 
 int main()
@@ -231,7 +317,8 @@ int main()
 	}
 
 // Call first come first server function
-	FCFS();
+	//FCFS();
+	SPN();
 
 /*Uncomment when ready to run
 
