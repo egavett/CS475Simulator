@@ -8,10 +8,9 @@
 using namespace std;
 
 //State of Process
-enum ProcessState
-{
-	STATE_NEW, STATE_READY, STATE_RUNNING, STATE_WAITING, STATE_FINISHED
-};
+enum ProcessState {STATE_NEW, STATE_READY, STATE_RUNNING, STATE_WAITING, STATE_FINISHED};
+
+enum Scheduler {SCHEDULER_FCFS, SCHEDULER_SPN};
 
 // Used to track clock cycles
 int globalTime = 0;
@@ -27,7 +26,6 @@ double totalWaitFCFS;
 double totalTurnFCFS;
 double totalWaitSPN;
 double totalTurnSPN;
-
 
 // Multiprocessor Ready Queue
 queue<Process*> pQueue;
@@ -47,8 +45,8 @@ Process* CPUs[4];
 
 vector<std::tuple<int, Process*>> SPNCPUQueue[4];
 
-// Simulates one cycle of wait for the IO 
-void IOExecute()
+// Simulates one cycle of wait for the IO
+void IOExecute(int scheduler)
 {
 	if (!IOQueue.empty()) 
 	{
@@ -65,8 +63,14 @@ void IOExecute()
 
 			cout << "Process " <<IOQueue.front()->ID << " returned to the ready queue." << endl;
 
-			// Return the process to the ready Queue
-			CPUQueue[0].push(IOQueue.front());
+			// Return the process to the ready Queue for the active scheduler
+			if (scheduler == SCHEDULER_FCFS) {
+				CPUQueue[0].push(IOQueue.front());
+			}
+			else if (scheduler == SCHEDULER_SPN) {
+				tuple<int, Process*> p = make_tuple(IOQueue.front()->myVec[IOQueue.front()->currentBurst], IOQueue.front());
+				SPNCPUQueue[0].push_back(p);
+			}
 			IOQueue.pop();
 
 			// Reset the burst time
@@ -88,6 +92,9 @@ void IOExecute()
 		IOBurst = -1;
 	}
 }
+
+
+
 
 // Function for the FCFS scheduling policy
 void FCFS()
@@ -173,7 +180,7 @@ void FCFS()
 		}
 
 		// Call the IOQueue to execute one cycle
-		IOExecute();
+		IOExecute(SCHEDULER_FCFS);
 
 		// Time click increase
 		globalTime++;	
@@ -206,26 +213,20 @@ void SPN()
 						vector<tuple<int,Process*>>::iterator it;
 						it = SPNCPUQueue[0].begin();
 						it = SPNCPUQueue[0].insert(it, p);
-
 					}
 					else 
 					{
 						SPNCPUQueue[0].push_back(p);
 					}
-					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
-					pQueue.pop();
 				}
 				else
 				{
 					SPNCPUQueue[0].push_back(p);
 				}
-				
+				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+				pQueue.pop();
 
-				
-
-				cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;
-				
-				
+				cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;	
 			}
 		}
 
@@ -243,7 +244,6 @@ void SPN()
 				CPUs[0]->currentBurst += 1;
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
-
 			// No more processes left, then exit
 			else if (pQueue.empty())
 			{
@@ -256,7 +256,6 @@ void SPN()
 		{
 			burst -= 1;
 		}
-
 		else
 		{
 			if (CPUs[0] != NULL)
@@ -279,7 +278,7 @@ void SPN()
 
 		// Call the IOQueue to execute one cycle
 
-		//IOExecute();
+		IOExecute(SCHEDULER_SPN);
 
 		// Time click increase
 		globalTime++;
