@@ -80,7 +80,6 @@ void IOExecute()
 			cout << "This is an IO burst:  " << IOBurst << endl;
 		}
 	} 
-
 	else
 	{
 		IOBurst = -1;
@@ -98,14 +97,30 @@ void FCFS()
 	{
 		cout << "The current cycle is: " << globalTime << endl;
 
-		if (!pQueue.empty())
+		// Add any newly arrived processes into the ready queue
+		int check = 0;
+		while (check == 0) 
 		{
-			// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
-			if (pQueue.front()->object->arrivalTime <= globalTime)
+			// Make sure pqueue still contains processes
+			if (!pQueue.empty()) 
 			{
-				CPUQueue[0].push(pQueue.front());
-				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
-				pQueue.pop();
+				// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
+				if (pQueue.front()->object->arrivalTime <= globalTime)
+				{
+					CPUQueue[0].push(pQueue.front());
+					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+					pQueue.pop();
+				}
+				else 
+				{
+					// exit while loop
+					check = 1;
+				}
+			}
+			else 
+			{
+				// exit while loop
+				check = 1;
 			}
 		}
 
@@ -123,9 +138,7 @@ void FCFS()
 				CPUs[0]->currentBurst += 1;
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
-
-			// No more processes left, then exit
-			else if (pQueue.empty())
+			else if (pQueue.empty()) // No more processes left, then exit
 			{
 				cont = 0;
 				break;
