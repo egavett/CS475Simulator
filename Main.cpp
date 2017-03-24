@@ -30,6 +30,10 @@ double totalTurnFCFS;
 double totalWaitSPN;
 double totalTurnSPN;
 
+double totalWaitRR;
+double totalTurnRR;
+int totalContextSwitch;
+
 // Multiprocessor Ready Queue
 queue<Process*> pQueue;
 
@@ -100,7 +104,7 @@ void IOExecute(int scheduler)
 			if (!IOQueue.empty()) 
 			{
 				IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
-				cout <<"This is an IO burst:  " << IOBurst;
+				cout <<"This is an IO burst:  " << IOBurst << endl;
 				totalTurnFCFS += IOBurst;
 				totalTurnSPN += IOBurst;
 			}
@@ -336,6 +340,126 @@ void SPN()
 	}
 }
 
+
+void RR(int q)
+{
+	// Local variables to keep track of loop and burst times
+	int cont = 1;
+	int burst = 0;
+	int quantum = q;
+
+	while (cont == 1)
+	{
+		cout << "The current cycle is: " << globalTime << endl;
+
+		// Add any newly arrived processes into the ready queue
+		int check = 0;
+		while (check == 0)
+		{
+			// Make sure pqueue still contains processes
+			if (!pQueue.empty())
+			{
+				// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
+				if (pQueue.front()->object->arrivalTime <= globalTime)
+				{
+					CPUQueue[0].push(pQueue.front());
+					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+					pQueue.pop();
+				}
+				else
+				{
+					// exit while loop
+					check = 1;
+				}
+			}
+			else
+			{
+				// exit while loop
+				check = 1;
+			}
+		}
+
+		if (CPUs[0] == NULL)
+		{
+			if (!CPUQueue[0].empty())
+			{
+				// Add processes to processor
+				CPUs[0] = CPUQueue[0].front();
+				CPUQueue[0].pop();
+
+				cout << "Process " << CPUs[0]->ID << " added to the CPU." << endl;
+				// Keep updated burst time
+				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
+				CPUs[0]->currentBurst += 1;
+				totalWaitRR += burst;
+				totalTurnRR += burst;
+				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
+			}
+			else if (pQueue.empty()) // No more processes left, then exit
+			{
+				cont = 0;
+				break;
+			}
+		}
+
+		if (quantum == 0 && burst != 0)
+		{
+			CPUs[0]->currentBurst -= 1;
+			CPUs[0]->myVec[CPUs[0]->currentBurst] = burst;
+			cout << "Process " << CPUs[0]->ID << " pushed to the back of the CPU Queue with " << burst << " remaining." << endl;
+			CPUQueue[0].push(CPUs[0]);
+			quantum = q;
+			totalContextSwitch += 1;
+			CPUs[0] = NULL;
+		}
+		else
+		{
+			if (burst != 0)
+			{
+				burst -= 1;
+				quantum -= 1;
+			}
+			else
+			{
+				if (CPUs[0] != NULL)
+				{
+					if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size())
+					{
+						// Place process in a vector for finished processes
+						CPUs[0]->object->turnAround = globalTime - CPUs[0]->object->arrivalTime;
+						terminated.push_back(CPUs[0]);
+						cout << "Process " << CPUs[0]->ID << " terminated." << endl;
+					}
+					else
+					{
+						// Otherwise add them to the IO queue
+						IOQueue.push(CPUs[0]);
+						cout << "Process " << CPUs[0]->ID << " pushed to the IOQueue." << endl;
+					}
+					quantum = q;
+					CPUs[0] = NULL;
+				}
+			}
+		}
+
+
+
+		// Call the IOQueue to execute one cycle
+		IOExecute(SCHEDULER_FCFS);
+
+		// Time click increase
+		globalTime++;
+	}
+}
+
+
+
+
+
+
+
+
+
 int main()
 {
 // Variables for file manipulation
@@ -382,18 +506,35 @@ int main()
 	}
 
 // Call first come first server function
-	FCFS();
-  //SPN();
+	//FCFS();
+	//SPN();
+	RR(5);
 
 
 ////////Uncomment when ready to run/////////
 
+
+	int totalTurnaround = 0;
+	for (int i = 0; i < terminated.size(); i++) {
+		totalTurnaround += terminated[i]->object->turnAround;
+	}
+	int avgTurnaround = totalTurnaround / terminated.size();
+
+// Statement to assign and display statistics for RR
+	averageWTime = totalWaitRR / terminated.size();
+	averageTATime = totalTurnRR / terminated.size();
+	cout << "Average wait time for RR: " << averageWTime << endl;
+	cout << "Average turnaround time for RR: " << avgTurnaround << endl;
+	cout << "Number of context switches: " << totalContextSwitch << endl;
+
+
+/*
 	// Statement to assign and display statistics for FCFS
 		averageWTime = totalWaitFCFS / terminated.size();
 		averageTATime = totalTurnFCFS / terminated.size();
 		cout << "Average wait time for FCFS: " << averageWTime << endl;
 		cout << "Average turnaround time for FCFS: " << averageTATime << endl;
-/*
+
 	// Statement to assign and display statistics for SPN
 		averageWTime = totalWaitSPN / terminated.size();
 		averageTATime = totalTurnSPN / terminated.size();

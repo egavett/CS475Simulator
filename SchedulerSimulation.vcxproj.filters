@@ -31,5 +31,8 @@
     <Text Include="timeInfo.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="timeInfo2.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
