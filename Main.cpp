@@ -69,7 +69,24 @@ void IOExecute(int scheduler)
 			}
 			else if (scheduler == SCHEDULER_SPN) {
 				tuple<int, Process*> p = make_tuple(IOQueue.front()->myVec[IOQueue.front()->currentBurst], IOQueue.front());
-				SPNCPUQueue[0].push_back(p);
+				if (!SPNCPUQueue[0].empty())
+				{
+					int index = 0;
+					for (int i = 0; i < SPNCPUQueue[0].size(); i++)
+					{
+						if (IOQueue.front()->myVec[IOQueue.front()->currentBurst] <= get<0>(SPNCPUQueue[0][i]))
+						{
+							index = i;
+						}
+					}
+					vector<tuple<int, Process*>>::iterator it = SPNCPUQueue[0].begin();
+					it += index;
+					it = SPNCPUQueue[0].insert(it, p);
+				}
+				else
+				{
+					SPNCPUQueue[0].push_back(p);
+				}
 			}
 			IOQueue.pop();
 
@@ -197,36 +214,52 @@ void SPN()
 	while (cont == 1)
 	{
 		cout << "The current cycle is: " << globalTime << endl;
-
-		if (!pQueue.empty())
+		int check = 0;
+		while (check == 0)
 		{
-			// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
-			if (pQueue.front()->object->arrivalTime <= globalTime)
+			// Make sure pqueue still contains processes
+			if (!pQueue.empty())
 			{
-				
-				tuple<int, Process*> p = make_tuple(pQueue.front()->myVec[pQueue.front()->currentBurst], pQueue.front());
-				
-				if (!SPNCPUQueue[0].empty()) 
+				// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
+				if (pQueue.front()->object->arrivalTime <= globalTime)
 				{
-					if (pQueue.front()->myVec[pQueue.front()->currentBurst] >= get<0>(SPNCPUQueue[0].front()))
+					tuple<int, Process*> p = make_tuple(pQueue.front()->myVec[pQueue.front()->currentBurst], pQueue.front());
+
+					if (!SPNCPUQueue[0].empty()) 
 					{
-						vector<tuple<int,Process*>>::iterator it;
-						it = SPNCPUQueue[0].begin();
+						int index = 0;
+						for (int i = 0; i < SPNCPUQueue[0].size(); i++) 
+						{
+							if (pQueue.front()->myVec[pQueue.front()->currentBurst] <= get<0>(SPNCPUQueue[0][i])) 
+							{
+								index = i;
+							}
+						}
+						vector<tuple<int, Process*>>::iterator it = SPNCPUQueue[0].begin();
+						it += index;
 						it = SPNCPUQueue[0].insert(it, p);
 					}
 					else 
 					{
 						SPNCPUQueue[0].push_back(p);
 					}
+
+					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+					pQueue.pop();
+
+					cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;
+
 				}
 				else
 				{
-					SPNCPUQueue[0].push_back(p);
+					// exit while loop
+					check = 1;
 				}
-				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
-				pQueue.pop();
-
-				cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;	
+			}
+			else
+			{
+				// exit while loop
+				check = 1;
 			}
 		}
 
