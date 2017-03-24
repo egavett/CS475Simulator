@@ -67,7 +67,7 @@ void IOExecute(int scheduler)
 		if (IOBurst == 0) 
 		{
 			IOQueue.front()->currentBurst += 1;
-
+			IOQueue.front()->object->arrivalTime = globalTime;
 			cout << "Process " <<IOQueue.front()->ID << " returned to the ready queue." << endl;
 
 			// Return the process to the ready Queue for the active scheduler
@@ -176,6 +176,11 @@ void FCFS()
 				// Keep updated burst time
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
+				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
+				if (CPUs[0]->object->responseTime == 0)
+				{
+					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
+				}
 				totalWaitFCFS += burst;
 				totalTurnFCFS += burst; 
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
@@ -198,6 +203,7 @@ void FCFS()
 				if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size())
 				{
 					// Place process in a vector for finished processes
+					CPUs[0]->object->turnAround = globalTime - CPUs[0]->object->arrivalTime;
 					terminated.push_back(CPUs[0]);
 					cout << "Process " << CPUs[0]->ID << " terminated." << endl;
 				}
@@ -221,11 +227,11 @@ void FCFS()
 
 
 void SPN()
+
 {
 	// Local variables to keep track of loop and burst times
 	int cont = 1;
 	int burst = 0;
-
 	while (cont == 1)
 	{
 		cout << "The current cycle is: " << globalTime << endl;
@@ -239,67 +245,59 @@ void SPN()
 				if (pQueue.front()->object->arrivalTime <= globalTime)
 				{
 					tuple<int, Process*> p = make_tuple(pQueue.front()->myVec[pQueue.front()->currentBurst], pQueue.front());
-
-					if (!SPNCPUQueue[0].empty()) 
+					if (!SPNCPUQueue[0].empty())
 					{
 						int index = 0;
-						for (int i = 0; i < SPNCPUQueue[0].size(); i++) 
+						for (int i = 0; i < SPNCPUQueue[0].size(); i++)
 						{
-							if (pQueue.front()->myVec[pQueue.front()->currentBurst] <= get<0>(SPNCPUQueue[0][i])) 
+							if (pQueue.front()->myVec[pQueue.front()->currentBurst] <= get<0>(SPNCPUQueue[0][i]))
 							{
 								index = i;
 							}
 						}
 						vector<tuple<int, Process*>>::iterator it = SPNCPUQueue[0].begin();
 						it += index;
-
 						it = SPNCPUQueue[0].insert(it, p);
 					}
-
-					else 
+					else
 					{
 						SPNCPUQueue[0].push_back(p);
 					}
-
 					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
 					pQueue.pop();
-
 					cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;
-
 				}
 				else
 				{
 					// exit while loop
 					check = 1;
 				}
-
-
-				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
-				pQueue.pop();
-
-				cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;	
+			}
+			else
+			{
+				// exit while loop
+				check = 1;
 			}
 		}
 
 		if (CPUs[0] == NULL)
 		{
-			// Check to see if SPN has no processes
 			if (!SPNCPUQueue[0].empty())
 			{
 				// Add processes to processor
 				CPUs[0] = get<1>(SPNCPUQueue[0].front());
 				SPNCPUQueue[0].erase(SPNCPUQueue[0].begin());
-
 				cout << "Process " << CPUs[0]->ID << " added to the CPU." << endl;
-
-				// Keep updated burst time and add it to the total wait time for processes
+				// Keep updated burst time
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
-				totalWaitSPN += burst;
-				totalTurnSPN += burst;
+				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
+				if (CPUs[0]->object->responseTime == 0)
+				{
+					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
+				}
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
-
 			// No more processes left, then exit
 			else if (pQueue.empty())
 			{
@@ -319,6 +317,7 @@ void SPN()
 				if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size())
 				{
 					// Place process in a vector for finished processes
+					CPUs[0]->object->turnAround = globalTime - CPUs[0]->object->arrivalTime;
 					terminated.push_back(CPUs[0]);
 					cout << "Process " << CPUs[0]->ID << " terminated." << endl;
 				}
@@ -331,14 +330,134 @@ void SPN()
 				CPUs[0] = NULL;
 			}
 		}
-
 		// Call the IOQueue to execute one cycle
 		IOExecute(SCHEDULER_SPN);
-
 		// Time click increase
 		globalTime++;
 	}
 }
+
+void SPN2()
+
+{
+	// Local variables to keep track of loop and burst times
+	int cont = 1;
+	int bursts[4];
+	while (cont == 1)
+	{
+		cout << "The current cycle is: " << globalTime << endl;
+		int check = 0;
+		while (check == 0)
+		{
+			// Make sure pqueue still contains processes
+			if (!pQueue.empty())
+			{
+				// If the arrival time is less than or equal to the global time then push this value onto the CPUQueue and remove it from the pQueue
+				if (pQueue.front()->object->arrivalTime <= globalTime)
+				{
+					tuple<int, Process*> p = make_tuple(pQueue.front()->myVec[pQueue.front()->currentBurst], pQueue.front());
+					if (!SPNCPUQueue[0].empty())
+					{
+						int index = 0;
+						for (int i = 0; i < SPNCPUQueue[0].size(); i++)
+						{
+							if (pQueue.front()->myVec[pQueue.front()->currentBurst] <= get<0>(SPNCPUQueue[0][i]))
+							{
+								index = i;
+							}
+						}
+						vector<tuple<int, Process*>>::iterator it = SPNCPUQueue[0].begin();
+						it += index;
+						it = SPNCPUQueue[0].insert(it, p);
+					}
+					else
+					{
+						SPNCPUQueue[0].push_back(p);
+					}
+					cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+					pQueue.pop();
+					cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;
+				}
+				else
+				{
+					// exit while loop
+					check = 1;
+				}
+			}
+			else
+			{
+				// exit while loop
+				check = 1;
+			}
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			if (!SPNCPUQueue[0].empty())
+			{
+				if (CPUs[i] == NULL)
+				{
+						// Add processes to processor
+						CPUs[i] = get<1>(SPNCPUQueue[0].front());
+						SPNCPUQueue[0].erase(SPNCPUQueue[0].begin());
+						cout << "Process " << CPUs[i]->ID << " added to the CPU." << endl;
+						// Keep updated burst time
+						bursts[i] = CPUs[i]->myVec[CPUs[i]->currentBurst];
+						CPUs[i]->currentBurst += 1;
+						CPUs[i]->object->waitTime += (globalTime - CPUs[i]->object->arrivalTime);
+						if (CPUs[i]->object->responseTime == 0)
+						{
+							CPUs[i]->object->responseTime = (globalTime - CPUs[i]->object->arrivalTime);
+						}
+
+
+					}
+
+					if (bursts[i] != 0)
+					{
+						bursts[i] -= 1;
+					}
+					else
+					{
+						if (CPUs[i] != NULL)
+						{
+							if (CPUs[i]->currentBurst >= CPUs[i]->myVec.size())
+							{
+								// Place process in a vector for finished processes
+								CPUs[i]->object->turnAround = globalTime - CPUs[i]->object->arrivalTime;
+								terminated.push_back(CPUs[i]);
+								cout << "Process " << CPUs[i]->ID << " terminated." << endl;
+							}
+							else
+							{
+								// Otherwise add them to the IO queue
+								IOQueue.push(CPUs[i]);
+								cout << "Process " << CPUs[i]->ID << " pushed to the IOQueue." << endl;
+							}
+							CPUs[i] = NULL;
+						}
+					}
+				}
+				else if (pQueue.empty())
+				{
+					cont = 0;
+					break;
+				}
+
+			}
+			// No more processes left, then exit
+
+		
+
+
+		// Call the IOQueue to execute one cycle
+		IOExecute(SCHEDULER_SPN);
+		// Time click increase
+		globalTime++;
+	}
+}
+
+
 
 
 void RR(int q)
@@ -391,8 +510,15 @@ void RR(int q)
 				// Keep updated burst time
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
+				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
+				if (CPUs[0]->object->responseTime == 0)
+				{
+					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
+				}
 				totalWaitRR += burst;
 				totalTurnRR += burst;
+
+
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
 			else if (pQueue.empty()) // No more processes left, then exit
@@ -508,23 +634,32 @@ int main()
 // Call first come first server function
 	//FCFS();
 	//SPN();
-	RR(5);
+	SPN2();
+	//RR(5);
 
 
 ////////Uncomment when ready to run/////////
 
 
 	int totalTurnaround = 0;
+	int totalWait = 0;
+	int totalResponse = 0;
+
 	for (int i = 0; i < terminated.size(); i++) {
 		totalTurnaround += terminated[i]->object->turnAround;
+		totalWait += terminated[i]->object->waitTime;
+		totalResponse += terminated[i]->object->responseTime;
+		
 	}
+	int avgResponse = totalResponse / terminated.size();
 	int avgTurnaround = totalTurnaround / terminated.size();
+	int avgWait = totalWait / terminated.size();
 
 // Statement to assign and display statistics for RR
-	averageWTime = totalWaitRR / terminated.size();
-	averageTATime = totalTurnRR / terminated.size();
-	cout << "Average wait time for RR: " << averageWTime << endl;
-	cout << "Average turnaround time for RR: " << avgTurnaround << endl;
+
+	cout << "Average wait time: " << avgWait << endl;
+	cout << "Average turnaround time: " << avgTurnaround << endl;
+	cout << "Average response time: " << avgResponse << endl;
 	cout << "Number of context switches: " << totalContextSwitch << endl;
 
 

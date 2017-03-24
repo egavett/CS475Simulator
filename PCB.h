@@ -12,6 +12,7 @@ public:
 	int cycleSoFar;
 	int waitTime;
 	int turnAround;
+	int responseTime;
 
 //No-Arg constructor, used for initialization
 	PCB()
@@ -20,6 +21,8 @@ public:
 		 cycleNeeded = 0;
 		 cycleSoFar = 0;
 		 turnAround = 0;
+		 waitTime = 0;
+		 responseTime = 0;
 		
 	}
 
