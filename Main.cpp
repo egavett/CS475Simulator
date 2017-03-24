@@ -292,10 +292,15 @@ void SPN()
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
 				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
+<<<<<<< HEAD
 				if (CPUs[0]->object->responseTime == 0)
 				{
 					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
 				}
+=======
+				totalWaitSPN += burst;
+				totalTurnSPN += burst;
+>>>>>>> origin/master
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
 			// No more processes left, then exit
@@ -511,10 +516,13 @@ void RR(int q)
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
 				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
+<<<<<<< HEAD
 				if (CPUs[0]->object->responseTime == 0)
 				{
 					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
 				}
+=======
+>>>>>>> origin/master
 				totalWaitRR += burst;
 				totalTurnRR += burst;
 
@@ -643,23 +651,37 @@ int main()
 
 	int totalTurnaround = 0;
 	int totalWait = 0;
+<<<<<<< HEAD
 	int totalResponse = 0;
+=======
+>>>>>>> origin/master
 
 	for (int i = 0; i < terminated.size(); i++) {
 		totalTurnaround += terminated[i]->object->turnAround;
 		totalWait += terminated[i]->object->waitTime;
+<<<<<<< HEAD
 		totalResponse += terminated[i]->object->responseTime;
 		
+=======
+		cout << terminated[i]->object->waitTime << endl;
+>>>>>>> origin/master
 	}
 	int avgResponse = totalResponse / terminated.size();
 	int avgTurnaround = totalTurnaround / terminated.size();
 	int avgWait = totalWait / terminated.size();
 
 // Statement to assign and display statistics for RR
+<<<<<<< HEAD
 
 	cout << "Average wait time: " << avgWait << endl;
 	cout << "Average turnaround time: " << avgTurnaround << endl;
 	cout << "Average response time: " << avgResponse << endl;
+=======
+	averageWTime = totalWaitRR / terminated.size();
+	averageTATime = totalTurnRR / terminated.size();
+	cout << "Average wait time for RR: " << avgWait << endl;
+	cout << "Average turnaround time for RR: " << avgTurnaround << endl;
+>>>>>>> origin/master
 	cout << "Number of context switches: " << totalContextSwitch << endl;
 
 
