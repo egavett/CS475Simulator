@@ -48,7 +48,7 @@ int IOBurst = -1;
 vector<Process*> terminated;
 
 // Represent processes: pointers to each processes bing 'executed'
-Process* CPUs[4];
+Process* CPUs[8];
 
 vector<std::tuple<int, Process*>> SPNCPUQueue[4];
 
@@ -292,15 +292,10 @@ void SPN()
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
 				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
-<<<<<<< HEAD
 				if (CPUs[0]->object->responseTime == 0)
 				{
 					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
 				}
-=======
-				totalWaitSPN += burst;
-				totalTurnSPN += burst;
->>>>>>> origin/master
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
 			// No more processes left, then exit
@@ -342,12 +337,12 @@ void SPN()
 	}
 }
 
-void SPN2()
+void SPN2(int p)
 
 {
 	// Local variables to keep track of loop and burst times
 	int cont = 1;
-	int bursts[4];
+	int bursts[8];
 	while (cont == 1)
 	{
 		cout << "The current cycle is: " << globalTime << endl;
@@ -396,7 +391,7 @@ void SPN2()
 			}
 		}
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < p; i++)
 		{
 			if (!SPNCPUQueue[0].empty())
 			{
@@ -516,13 +511,10 @@ void RR(int q)
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
 				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
-<<<<<<< HEAD
 				if (CPUs[0]->object->responseTime == 0)
 				{
 					CPUs[0]->object->responseTime = (globalTime - CPUs[0]->object->arrivalTime);
 				}
-=======
->>>>>>> origin/master
 				totalWaitRR += burst;
 				totalTurnRR += burst;
 
@@ -639,10 +631,10 @@ int main()
 		pQueue.push(p);
 	}
 
-// Call first come first server function
 	//FCFS();
-	//SPN();
-	SPN2();
+	SPN();
+	//SPN2(4);
+	//SPN2(8);
 	//RR(5);
 
 
@@ -651,37 +643,23 @@ int main()
 
 	int totalTurnaround = 0;
 	int totalWait = 0;
-<<<<<<< HEAD
 	int totalResponse = 0;
-=======
->>>>>>> origin/master
 
 	for (int i = 0; i < terminated.size(); i++) {
 		totalTurnaround += terminated[i]->object->turnAround;
 		totalWait += terminated[i]->object->waitTime;
-<<<<<<< HEAD
 		totalResponse += terminated[i]->object->responseTime;
 		
-=======
-		cout << terminated[i]->object->waitTime << endl;
->>>>>>> origin/master
 	}
 	int avgResponse = totalResponse / terminated.size();
 	int avgTurnaround = totalTurnaround / terminated.size();
 	int avgWait = totalWait / terminated.size();
 
 // Statement to assign and display statistics for RR
-<<<<<<< HEAD
 
 	cout << "Average wait time: " << avgWait << endl;
 	cout << "Average turnaround time: " << avgTurnaround << endl;
 	cout << "Average response time: " << avgResponse << endl;
-=======
-	averageWTime = totalWaitRR / terminated.size();
-	averageTATime = totalTurnRR / terminated.size();
-	cout << "Average wait time for RR: " << avgWait << endl;
-	cout << "Average turnaround time for RR: " << avgTurnaround << endl;
->>>>>>> origin/master
 	cout << "Number of context switches: " << totalContextSwitch << endl;
 
 
