@@ -16,14 +16,17 @@ enum Scheduler {SCHEDULER_FCFS, SCHEDULER_SPN};
 int globalTime = 0;
 
 //Global variables used to calculate program statistics
-int throughputTime;
-int averageTATime;
-int averageWTime;
-int averageRTime;
-int averageSwitchTime;
-int processorUtilTIme;
+double throughputTime;
+double averageTATime;
+double averageWTime;
+double averageRTime;
+
+double averageSwitchTime;
+double processorUtilTIme;
+
 double totalWaitFCFS;
 double totalTurnFCFS;
+
 double totalWaitSPN;
 double totalTurnSPN;
 
@@ -64,10 +67,13 @@ void IOExecute(int scheduler)
 			cout << "Process " <<IOQueue.front()->ID << " returned to the ready queue." << endl;
 
 			// Return the process to the ready Queue for the active scheduler
-			if (scheduler == SCHEDULER_FCFS) {
+			if (scheduler == SCHEDULER_FCFS) 
+			{
 				CPUQueue[0].push(IOQueue.front());
 			}
-			else if (scheduler == SCHEDULER_SPN) {
+	
+			else if (scheduler == SCHEDULER_SPN)
+			{
 				tuple<int, Process*> p = make_tuple(IOQueue.front()->myVec[IOQueue.front()->currentBurst], IOQueue.front());
 				if (!SPNCPUQueue[0].empty())
 				{
@@ -90,13 +96,16 @@ void IOExecute(int scheduler)
 			}
 			IOQueue.pop();
 
-			// Reset the burst time
+			// Reset the burst time and add it to the total turn around time
 			if (!IOQueue.empty()) 
 			{
 				IOBurst = IOQueue.front()->myVec[IOQueue.front()->currentBurst];
 				cout <<"This is an IO burst:  " << IOBurst;
+				totalTurnFCFS += IOBurst;
+				totalTurnSPN += IOBurst;
 			}
 		} 
+
 		else if (IOBurst == -1)
 		{
 			// Set initial burst time
@@ -163,6 +172,8 @@ void FCFS()
 				// Keep updated burst time
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
+				totalWaitFCFS += burst;
+				totalTurnFCFS += burst; 
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
 			else if (pQueue.empty()) // No more processes left, then exit
@@ -237,8 +248,10 @@ void SPN()
 						}
 						vector<tuple<int, Process*>>::iterator it = SPNCPUQueue[0].begin();
 						it += index;
+
 						it = SPNCPUQueue[0].insert(it, p);
 					}
+
 					else 
 					{
 						SPNCPUQueue[0].push_back(p);
@@ -255,16 +268,18 @@ void SPN()
 					// exit while loop
 					check = 1;
 				}
-			}
-			else
-			{
-				// exit while loop
-				check = 1;
+
+
+				cout << "Process " << pQueue.front()->ID << " has arrived." << endl;
+				pQueue.pop();
+
+				cout << "max burst time: " << get<0>(SPNCPUQueue[0].front()) << endl;	
 			}
 		}
 
 		if (CPUs[0] == NULL)
 		{
+			// Check to see if SPN has no processes
 			if (!SPNCPUQueue[0].empty())
 			{
 				// Add processes to processor
@@ -272,11 +287,15 @@ void SPN()
 				SPNCPUQueue[0].erase(SPNCPUQueue[0].begin());
 
 				cout << "Process " << CPUs[0]->ID << " added to the CPU." << endl;
-				// Keep updated burst time
+
+				// Keep updated burst time and add it to the total wait time for processes
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
+				totalWaitSPN += burst;
+				totalTurnSPN += burst;
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
+
 			// No more processes left, then exit
 			else if (pQueue.empty())
 			{
@@ -310,7 +329,6 @@ void SPN()
 		}
 
 		// Call the IOQueue to execute one cycle
-
 		IOExecute(SCHEDULER_SPN);
 
 		// Time click increase
@@ -357,29 +375,31 @@ int main()
 			i++;
 		}
 		
-			// Create a new process and add it to the queue
+		// Create a new process and add it to the queue
 		PCB *block = new PCB();
 		p = new Process(PID, 0, block, timeVec);
 		pQueue.push(p);
 	}
 
 // Call first come first server function
-	//FCFS();
-	SPN();
+	FCFS();
+  //SPN();
 
-/*Uncomment when ready to run
 
-// Statement to assign and display statistics for FCFS
-	averageWTime = totalWaitFCFS / terminated.size();
-	averageTATime = totalTurnFCFS / terminated.size();
-	cout << "Average wait time for FCFS: " << averageWTime << endl;
-	cout << "Average turnaround time for FCFS: " << averageTATime << endl;
+////////Uncomment when ready to run/////////
 
-// Statement to assign and display statistics for SPN
-	averageWTime = totalWaitSPN / terminated.size();
-	averageTATime = totalTurnSPN / terminated.size();
-	cout << "Average wait time for SPN: " << averageWTime << endl;
-	cout << "Average turnaround time for SPN: " << averageTATime << endl;
+	// Statement to assign and display statistics for FCFS
+		averageWTime = totalWaitFCFS / terminated.size();
+		averageTATime = totalTurnFCFS / terminated.size();
+		cout << "Average wait time for FCFS: " << averageWTime << endl;
+		cout << "Average turnaround time for FCFS: " << averageTATime << endl;
+/*
+	// Statement to assign and display statistics for SPN
+		averageWTime = totalWaitSPN / terminated.size();
+		averageTATime = totalTurnSPN / terminated.size();
+		cout << "Average wait time for SPN: " << averageWTime << endl;
+		cout << "Average turnaround time for SPN: " << averageTATime << endl;
 */
+
 	return 0;
 }
