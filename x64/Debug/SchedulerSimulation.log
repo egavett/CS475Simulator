@@ -1,3 +1,6 @@
 ﻿  Main.cpp
-  SchedulerSimulation.vcxproj -> C:\Users\hgrove17\Documents\GitHub\CS475Simulator\x64\Debug\SchedulerSimulation.exe
-  SchedulerSimulation.vcxproj -> C:\Users\hgrove17\Documents\GitHub\CS475Simulator\x64\Debug\SchedulerSimulation.pdb (Full PDB)
+y:\fruitloops\cs475simulator\main.cpp(654): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+y:\fruitloops\cs475simulator\main.cpp(655): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+y:\fruitloops\cs475simulator\main.cpp(656): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  SchedulerSimulation.vcxproj -> Y:\FruitLOOPS\CS475Simulator\x64\Debug\SchedulerSimulation.exe
+  SchedulerSimulation.vcxproj -> Y:\FruitLOOPS\CS475Simulator\x64\Debug\SchedulerSimulation.pdb (Full PDB)
