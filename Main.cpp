@@ -67,7 +67,7 @@ void IOExecute(int scheduler)
 		if (IOBurst == 0) 
 		{
 			IOQueue.front()->currentBurst += 1;
-
+			IOQueue.front()->object->arrivalTime = globalTime;
 			cout << "Process " <<IOQueue.front()->ID << " returned to the ready queue." << endl;
 
 			// Return the process to the ready Queue for the active scheduler
@@ -295,6 +295,7 @@ void SPN()
 				// Keep updated burst time and add it to the total wait time for processes
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
+				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
 				totalWaitSPN += burst;
 				totalTurnSPN += burst;
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
@@ -319,6 +320,7 @@ void SPN()
 				if (CPUs[0]->currentBurst >= CPUs[0]->myVec.size())
 				{
 					// Place process in a vector for finished processes
+					CPUs[0]->object->turnAround = globalTime - CPUs[0]->object->arrivalTime;
 					terminated.push_back(CPUs[0]);
 					cout << "Process " << CPUs[0]->ID << " terminated." << endl;
 				}
@@ -391,8 +393,11 @@ void RR(int q)
 				// Keep updated burst time
 				burst = CPUs[0]->myVec[CPUs[0]->currentBurst];
 				CPUs[0]->currentBurst += 1;
+				CPUs[0]->object->waitTime += (globalTime - CPUs[0]->object->arrivalTime);
 				totalWaitRR += burst;
 				totalTurnRR += burst;
+
+
 				//cout << CPUs[0]->myVec[CPUs[0]->currentBurst] << endl;
 			}
 			else if (pQueue.empty()) // No more processes left, then exit
@@ -515,15 +520,20 @@ int main()
 
 
 	int totalTurnaround = 0;
+	int totalWait = 0;
+
 	for (int i = 0; i < terminated.size(); i++) {
 		totalTurnaround += terminated[i]->object->turnAround;
+		totalWait += terminated[i]->object->waitTime;
+		cout << terminated[i]->object->waitTime << endl;
 	}
 	int avgTurnaround = totalTurnaround / terminated.size();
+	int avgWait = totalWait / terminated.size();
 
 // Statement to assign and display statistics for RR
 	averageWTime = totalWaitRR / terminated.size();
 	averageTATime = totalTurnRR / terminated.size();
-	cout << "Average wait time for RR: " << averageWTime << endl;
+	cout << "Average wait time for RR: " << avgWait << endl;
 	cout << "Average turnaround time for RR: " << avgTurnaround << endl;
 	cout << "Number of context switches: " << totalContextSwitch << endl;
 
